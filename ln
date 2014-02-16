@@ -31,13 +31,13 @@ exec_mklink() {
     fi
 
     if [ -d "$2" ]; then
-        target_file="${2}/`basename $1`"
+        target_file="${2}/`basename \"$1\"`"
     else
         target_file="${2}"
     fi
 
-    if [ "$F" == 'F' -a -f $target_file ]; then
-        rm $target_file
+    if [ "$F" == 'F' -a -f "$target_file" ]; then
+        rm "$target_file"
     fi
 
     cmd /c mklink $D $H "`cygpath -w \"$target_file\"`" "`cygpath -w \"$1\"`"
@@ -67,6 +67,7 @@ elif [ $# -eq 1 ]; then # 引数が1つの時はカレントディレクトリ�
     target=`basename "$1"`
     exec_mklink "$1" "$target"
 elif [ $# -eq 2 ]; then
+    echo $2
     exec_mklink "$1" "$2"
 else
     eval target=\${$#}
