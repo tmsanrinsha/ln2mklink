@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# http://sanrinsha.lolipop.jp/blog/2012/09/cygwin%E3%81%AEln%E3%82%92mklink%E3%81%AB%E5%A4%89%E6%8F%9B%E3%81%99%E3%82%8B%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88.html
+
+CMDNAME=`basename $0`
+
+usage() {
+    cat <<EOT
+usage: $CMDNAME -s source_(file|dir) [target_(file|dir)]
+       $CMDNAME -s source_(file|dir) ... target_dir
+       $CMDNAME    source_file [target_(file|dir)]
+       $CMDNAME    source_file ... target_dir
+EOT
+}
+
+# Usage:
+#   exec_mklink source target
+#     source - Cygwin上のsourceのパス
+#     target - Cygwin上のtargetのパス
+#
+# Description:
+#   mklinkを実行する
+exec_mklink() {
+    local D=''
+    [ -d "$1" ] && D=/D
+
+    # ディレクトリのハードリンクは作れない
+    # $Hはハードリンクオプションを表すグローバル変数
+    if [ "$D" == '/D' -a "$H" == '/H' ]; then
+        echo ${CMDNAME}: $1: Is a directory
+        exit 1
+    fi
+
+    if [ -d "$2" ]; then
+        target_file="${2}/`basename $1`"
+    else
+        target_file="${2}"
+    fi
+
+    if [ "$F" == 'F' -a -f $target_file ]; then
+        rm $target_file
+    fi
+
+    cmd /c mklink $D $H "`cygpath -w \"$target_file\"`" "`cygpath -w \"$1\"`"
+}
+
+[ "$1" = '-h' -o "$1" = '--help' ] && usage && exit 1
+
+H=/H
+F=''
+
+while getopts sFLPfihnv OPT
+do
+  case $OPT in
+    "s" ) H= ;;
+    "f" ) F='F';;
+    # 他のオプションは無視
+  esac
+done
+
+# オプション部分を取り除く
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 1
+elif [ $# -eq 1 ]; then # 引数が1つの時はカレントディレクトリに同名のリンクを作る
+    target=`basename "$1"`
+    exec_mklink "$1" "$target"
+elif [ $# -eq 2 ]; then
+    exec_mklink "$1" "$2"
+else
+    eval target=\${$#}
+    if [ ! -d "$target" ]; then # 引数が3つ以上のときは最後の引数はディレクトリ
+        echo ${CMDNAME}: ${target}: No such directory
+        exit 1
+    fi
+    while [ "$1" != "$target" ]
+    do
+        exec_mklink "$1" "$target"
+        shift
+    done
+fi
+
+exit 0
