@@ -1,3 +1,10 @@
+Note
+====
+
+わざわざラッパーを書かなくても、環境変数CYGWINにwinsymlinksを設定することで Cygwinのln -sコマンドをWindowsのシンボリックリンク作成コマンドへ変更することができるらしい。
+
+* [Cygwin内外でリンクを共有する](http://rcmdnk.github.io/blog/2013/06/25/computer-windows-cygwin/)
+
 Usage
 =====
 
